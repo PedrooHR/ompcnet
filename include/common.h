@@ -14,7 +14,6 @@ enum OPERATION {
   stream_from = 4,
   stream2mem = 5,
   mem2stream = 6,
-  exit = 0,
 };
 
 // Macros for control word

@@ -100,9 +100,6 @@ void net2app(hls::stream<control_word> &controller,
 
     status = mm2s_sts.read();
   } break;
-  case exit:
-    break;
-
   default:
     break;
   }

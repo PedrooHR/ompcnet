@@ -73,16 +73,6 @@ void controller(ap_uint<32> src,
 
     net2app.write(inst);
     break;
-  case exit:    
-    inst.data.range( 31,   0) = -1;
-    inst.data.range( 63,  32) = -1;
-    inst.data.range( 71,  64) = exit;
-    inst.data.range(135,  72) = -1;
-    inst.data.range(167, 136) = -1;
-
-    app2net.write(inst);
-    net2app.write(inst);
-    break;
   default:
     break;
   }

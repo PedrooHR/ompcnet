@@ -113,9 +113,6 @@ void app2net(hls::stream<control_word> &controller,
 
     status = s2mm_sts.read();
   } break;
-  case exit:
-    break;
-
   default:
     break;
   }
