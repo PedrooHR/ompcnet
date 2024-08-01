@@ -19,7 +19,7 @@ void net2app(hls::stream<control_word> &controller,
 #pragma HLS INTERFACE mode = axis port = s2mm_sts
 #pragma HLS INTERFACE mode = axis port = dm_in
 #pragma HLS INTERFACE mode = axis port = dm_out
-#pragma HLS INTERFACE s_axilite port = return
+#pragma HLS INTERFACE ap_ctrl_none port = return
 
   // pkts
   data_word dm_data;
