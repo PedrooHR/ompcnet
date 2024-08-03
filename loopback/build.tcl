@@ -41,4 +41,6 @@ if {$do_export} {
     export_design
 }
 
+close_project
+
 exit
