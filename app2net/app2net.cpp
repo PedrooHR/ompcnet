@@ -32,37 +32,33 @@ void app2net(hls::stream<control_word> &controller,
   sts_word status;
 
   inst = controller.read();
-  ap_int<8> operation = control_op(inst);
+  ap_uint<3> operation = control_op(inst);
 
   switch (operation) {
     /*
       Send Operation:
         - Sends data from a memory mapped space to the Network stack
     */
-  case send: {
-    int len = control_len(inst);
-    uintptr_t address = control_address(inst);
+  case OPERATION::send: {
+    ap_uint<16> dest = control_dst(inst);
+    ap_uint<29> npackets = control_len(inst) / 64;
+    ap_uint<64> address = control_address(inst);
+
+    // Data mover command
+    command_address(command) = address;
+    command_len(command) = control_len(inst);
+    mm2s_cmd.write(command);
 
     // network packet
     net_data.dest = control_dst(inst);
     net_data.last = 0;
 
-    // Data mover command
-    command_address(command) = address;
-    command_len(command) = len;
-    mm2s_cmd.write(command);
-
     // data attribution
-    int i = 0, j = 0;
-    while (i < len) {
-      j = 0;
-      while (i < len && j < 64) {
-        dm_data = dm_out.read();
-        net_data.data.range(range_f(j), range_s(j)) = dm_data.data;
-        i++;
-        j++;
-      }
-      if (i == len) // last pkt
+  send_loop:
+    for (ap_uint<29> i = 0; i < npackets; i++) { // in bytes
+#pragma HLS pipeline II=1
+      net_data.data = dm_out.read().data;
+      if (i == (npackets - 1)) // last pkt
         net_data.last = 1;
       network.write(net_data);
     }
@@ -73,42 +69,39 @@ void app2net(hls::stream<control_word> &controller,
       Stream To Operation:
         - Streams from the application to the Network stack
     */
-  case stream_to: {
-    int len = control_len(inst);
+  case OPERATION::stream_to: {
+    ap_uint<29> npackets = control_len(inst) / 64;
 
     net_data.dest = control_dst(inst);
     net_data.last = 0;
 
     // data attribution
-    int i = 0, j = 0;
-    while (i < len) {
-      j = 0;
-      while (i < len && j < 64) {
-        net_data.data.range(range_f(j), range_s(j)) = application.read().data;
-        i++;
-        j++;
-      }
-      if (i == len) // last pkt
+  stream_to_loop:
+    for (ap_uint<29> i = 0; i < npackets; i++) { // in bytes
+#pragma HLS pipeline II=1
+      net_data.data = application.read().data;
+      if (i == (npackets - 1)) // last pkt
         net_data.last = 1;
       network.write(net_data);
     }
   } break;
     /*
       Stream 2 Mem Operation:
-        - Localy streams from the application to a memory mapped space
+        - Locally streams from the application to a memory mapped space
     */
-  case stream2mem: {
-    int len = control_len(inst);
-    uintptr_t address = control_address(inst);
+  case OPERATION::stream2mem: {
+    ap_uint<29> len = control_len(inst);
+    ap_uint<64> address = control_address(inst);
 
     // Data mover command
     command_address(command) = address;
     command_len(command) = len;
     s2mm_cmd.write(command);
 
-    for (int i = 0; i < len; i++) {
-      dm_data.data = application.read().data;
-      dm_in.write(dm_data);
+  stream2mem_loop:
+    for (ap_uint<29> i = 0; i < len / 64; i++) { // in bytes
+#pragma HLS pipeline II=1
+      dm_in.write(application.read());
     }
 
     status = s2mm_sts.read();

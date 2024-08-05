@@ -32,7 +32,7 @@ void net2app(hls::stream<control_word> &controller,
   sts_word status;
 
   inst = controller.read();
-  ap_int<8> operation = control_op(inst);
+  ap_uint<3> operation = control_op(inst);
 
   switch (operation) {
     /*
@@ -40,24 +40,19 @@ void net2app(hls::stream<control_word> &controller,
         - Receives from the Network stack and stores in a memory mapped space
     */
   case recv: {
-    int len = control_len(inst);
-    uintptr_t address = control_address(inst);
+    ap_uint<29> npackets = control_len(inst) / 64;
+    ap_uint<64> address = control_address(inst);
 
     command_address(command) = address;
-    command_len(command) = len;
+    command_len(command) = control_len(inst);
     s2mm_cmd.write(command);
 
     // data attribution
-    int i = 0, j = 0;
-    while (i < len) {
-      j = 0;
-      net_data = network.read();
-      while (i < len && j < 64) {
-        dm_data.data = net_data.data.range(range_f(j), range_s(j));
-        dm_in.write(dm_data);
-        i++;
-        j++;
-      }
+  recv_loop:
+    for (ap_uint<29> i = 0; i < npackets; i++) { // in bytes
+#pragma HLS pipeline II=1
+      dm_data.data = network.read().data;
+      dm_in.write(dm_data);
     }
 
     status = s2mm_sts.read();
@@ -67,18 +62,13 @@ void net2app(hls::stream<control_word> &controller,
         - Receives from the Network stack and redirects to the application
     */
   case stream_from: {
-    int len = control_len(inst);
+    ap_uint<29> npackets = control_len(inst) / 64;
 
-    int i = 0, j = 0;
-    while (i < len) {
-      j = 0;
-      net_data = network.read();
-      while (i < len && j < 64) {
-        app_data.data = net_data.data.range(range_f(j), range_s(j));
-        application.write(app_data);
-        i++;
-        j++;
-      }
+ stream_from_loop:
+    for (ap_uint<29> i = 0; i < npackets; i++) { // in bytes
+#pragma HLS pipeline II=1
+      app_data.data = network.read().data;
+      application.write(app_data);
     }
   } break;
     /*
@@ -93,9 +83,10 @@ void net2app(hls::stream<control_word> &controller,
     command_len(command) = len;
     mm2s_cmd.write(command);
 
-    for (int i = 0; i < len; i++) {
-      app_data.data = dm_out.read().data;
-      application.write(app_data);
+  stream2mem_loop:
+    for (ap_uint<29> i = 0; i < len / 64; i++) { // in bytes
+#pragma HLS pipeline II=1
+      application.write(dm_out.read());
     }
 
     status = mm2s_sts.read();

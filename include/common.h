@@ -4,34 +4,31 @@
 
 #include <stdint.h>
 
-#define range_s(j) j * 8
-#define range_f(j) range_s(j) + 7
-
 enum OPERATION {
-  send = 1,
-  recv = 2,
-  stream_to = 3,
-  stream_from = 4,
-  stream2mem = 5,
-  mem2stream = 6,
+  send        = 0b001,
+  recv        = 0b010,
+  stream_to   = 0b011,
+  stream_from = 0b100,
+  stream2mem  = 0b101,
+  mem2stream  = 0b110,
 };
 
 // Macros for control word
-#define control_src(x)      x.data.range( 31,   0)
-#define control_dst(x)      x.data.range( 63,  32)
-#define control_op(x)       x.data.range( 71,  64)
-#define control_address(x)  x.data.range(135,  72)
-#define control_len(x)      x.data.range(167, 136)
+#define control_address(x)  x.data.range( 63,   0)
+#define control_src(x)      x.data.range( 79,  64)
+#define control_dst(x)      x.data.range( 95,  80)
+#define control_len(x)      x.data.range(124,  96)
+#define control_op(x)       x.data.range(127, 125)
 
 // Macros for cmd word
 #define command_address(x)  x.data.range( 63,   0)
-#define command_len(x)      x.data.range( 95,  64)
+#define command_len(x)      x.data.range( 92,  64)
 
 // Stream pkt definitions
-typedef ap_axiu<8, 0, 0, 0> application_word;
-typedef ap_axiu<512, 0, 0, 16> network_word;
-typedef ap_axiu<168, 0, 0, 0> control_word;
-typedef ap_axiu<96, 0, 0, 0> cmd_word;
-typedef ap_axiu<32, 0, 0, 0> sts_word;
-typedef ap_axiu<8, 0, 0, 0> data_word;
-typedef ap_int<8> mem_word;
+typedef ap_uint<32> mem_word;
+typedef ap_axiu<512, 0, 0, 0> application_word;
+typedef ap_axiu<512, 0, 0, 0> data_word;
+typedef ap_axiu<512, 1, 1, 16> network_word;
+typedef ap_axiu<128, 0, 0, 0> control_word;
+typedef ap_axiu<93, 0, 0, 0> cmd_word;
+typedef ap_axiu<1, 0, 0, 0> sts_word;

@@ -1,10 +1,10 @@
 #include "controller.h"
 
-void controller(ap_uint<32> src,
-                ap_uint<32> dst,
-                ap_uint< 8> operation,
+void controller(ap_int<16> src,
+                ap_int<16> dst,
+                ap_uint< 3> operation,
                 ap_uint<64> address,
-                ap_uint<32> size,
+                ap_uint<29> size,
                 hls::stream<control_word> &app2net,
                 hls::stream<control_word> &net2app) {
 #pragma HLS INTERFACE s_axilite port = src bundle = control
@@ -20,56 +20,56 @@ void controller(ap_uint<32> src,
 
   switch (operation) {
   case send:
-    inst.data.range( 31,   0) = -1;
-    inst.data.range( 63,  32) = dst;
-    inst.data.range( 71,  64) = send;
-    inst.data.range(135,  72) = address;
-    inst.data.range(167, 136) = size;
+    inst.data.range( 63,   0) = address;
+    inst.data.range( 79,  64) = -1;
+    inst.data.range( 95,  80) = dst;
+    inst.data.range(124,  96) = size;
+    inst.data.range(127, 125) = send;
 
     app2net.write(inst);
     break;
   case recv:
-    inst.data.range( 31,   0) = src;
-    inst.data.range( 63,  32) = -1;
-    inst.data.range( 71,  64) = recv;
-    inst.data.range(135,  72) = address;
-    inst.data.range(167, 136) = size;
+    inst.data.range( 63,   0) = address;
+    inst.data.range( 79,  64) = src;
+    inst.data.range( 95,  80) = -1;
+    inst.data.range(124,  96) = size;
+    inst.data.range(127, 125) = recv;
 
     net2app.write(inst);
     break;
   case stream_to:
-    inst.data.range( 31,   0) = -1;
-    inst.data.range( 63,  32) = dst;
-    inst.data.range( 71,  64) = stream_to;
-    inst.data.range(135,  72) = -1;
-    inst.data.range(167, 136) = size;
+    inst.data.range( 63,   0) = -1;
+    inst.data.range( 79,  64) = -1;
+    inst.data.range( 95,  80) = dst;
+    inst.data.range(124,  96) = size;
+    inst.data.range(127, 125) = stream_to;
 
     app2net.write(inst);
     break;
   case stream_from:
-    inst.data.range( 31,   0) = src;
-    inst.data.range( 63,  32) = -1;
-    inst.data.range( 71,  64) = stream_from;
-    inst.data.range(135,  72) = -1;
-    inst.data.range(167, 136) = size;
+    inst.data.range( 63,   0) = -1;
+    inst.data.range( 79,  64) = src;
+    inst.data.range( 95,  80) = -1;
+    inst.data.range(124,  96) = size;
+    inst.data.range(127, 125) = stream_from;
 
     net2app.write(inst);
     break;
   case stream2mem: // This outputs application stream into mem values (local)
-    inst.data.range( 31,   0) = -1;
-    inst.data.range( 63,  32) = -1;
-    inst.data.range( 71,  64) = stream2mem;
-    inst.data.range(135,  72) = address;
-    inst.data.range(167, 136) = size;
+    inst.data.range( 63,   0) = address;
+    inst.data.range( 79,  64) = -1;
+    inst.data.range( 95,  80) = -1;
+    inst.data.range(124,  96) = size;
+    inst.data.range(127, 125) = stream2mem;
 
     app2net.write(inst);
     break;
   case mem2stream: // This inputs mem values into application stream (local)
-    inst.data.range( 31,   0) = -1;
-    inst.data.range( 63,  32) = -1;
-    inst.data.range( 71,  64) = mem2stream;
-    inst.data.range(135,  72) = address;
-    inst.data.range(167, 136) = size;
+    inst.data.range( 63,   0) = address;
+    inst.data.range( 79,  64) = -1;
+    inst.data.range( 95,  80) = -1;
+    inst.data.range(124,  96) = size;
+    inst.data.range(127, 125) = mem2stream;
 
     net2app.write(inst);
     break;
