@@ -13,13 +13,6 @@ enum OPERATION {
   mem2stream  = 0b110,
 };
 
-// Macros for control word
-#define control_address(x)  x.data.range( 63,   0)
-#define control_src(x)      x.data.range( 79,  64)
-#define control_dst(x)      x.data.range( 95,  80)
-#define control_len(x)      x.data.range(124,  96)
-#define control_op(x)       x.data.range(127, 125)
-
 // Macros for cmd word
 #define command_address(x)  x.data.range( 63,   0)
 #define command_len(x)      x.data.range( 92,  64)
@@ -29,6 +22,5 @@ typedef ap_uint<32> mem_word;
 typedef ap_axiu<512, 0, 0, 0> application_word;
 typedef ap_axiu<512, 0, 0, 0> data_word;
 typedef ap_axiu<512, 1, 1, 16> network_word;
-typedef ap_axiu<128, 0, 0, 0> control_word;
 typedef ap_axiu<93, 0, 0, 0> cmd_word;
 typedef ap_axiu<1, 0, 0, 0> sts_word;
