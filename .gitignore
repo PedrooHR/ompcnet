@@ -2,3 +2,4 @@
 *.log
 *.xo
 .vscode
+*.so
