@@ -52,12 +52,17 @@ void app2net(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
     net_data.last = 0;
 
     // data attribution
+    ap_uint<5> packet_idx = 0;
   send_loop:
     for (ap_uint<32> i = 0; i < npackets; i++) { // in bytes
 #pragma HLS pipeline II = 1
+      packet_idx = packet_idx + 1;
       net_data.data = dm_out.read().data;
-      if (i == (npackets - 1)) // last pkt
+      if (packet_idx >= 22 || i == (npackets - 1)) {
+        // end of the packet (1408b)
         net_data.last = 1;
+        packet_idx = 0;
+      }
       network.write(net_data);
     }
 
@@ -72,12 +77,17 @@ void app2net(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
     net_data.last = 0;
 
     // data attribution
+    ap_uint<5> packet_idx = 0;
   stream_to_loop:
     for (ap_uint<32> i = 0; i < npackets; i++) { // in bytes
 #pragma HLS pipeline II = 1
+      packet_idx = packet_idx + 1;
       net_data.data = application.read().data;
-      if (i == (npackets - 1)) // last pkt
+      if (packet_idx >= 22 || i == (npackets - 1)) {
+        // end of the packet (1408b)
         net_data.last = 1;
+        packet_idx = 0;
+      }
       network.write(net_data);
     }
   } break;
