@@ -30,10 +30,14 @@ switch $command {
 
 open_project build
 
-add_files network.cpp -cflags "-std=c++14 -I. -I../include"
+if ($do_cosim) {
+    add_files network.cpp -cflags "-std=c++14 -I. -I../include -DCOSIM"
+} else {
+    add_files network.cpp -cflags "-std=c++14 -I. -I../include"
+}
 
 if {$do_cosim} {
-    add_files -tb tb_network.cpp -cflags "-std=c++14 -I. -I../include"
+    add_files -tb tb_network.cpp -cflags "-std=c++14 -I. -I../include -DCOSIM"
 }
 
 set_top network
