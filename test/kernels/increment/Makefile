@@ -1,9 +1,9 @@
 DEVICE=xcu55c-fsvh2892-2L-e
 TARGET=ip
 
-all: network
+all: increment
 
-network: build.tcl *.cpp *.h
+increment: build.tcl *.cpp *.h
 	vitis_hls $< -tclargs $(TARGET) $(DEVICE)
 
 clean:

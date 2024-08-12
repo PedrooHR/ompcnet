@@ -3,6 +3,7 @@
 
 #include <queue>
 #include <stdint.h>
+#include <string>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -29,6 +30,8 @@ private:
 
 public:
   OMPCNet(xrt::device device);
+  OMPCNet(xrt::device device, std::string app2net_name,
+          std::string net2app_name);
   ~OMPCNet();
 
   void Send(int32_t src, int32_t recv, int32_t tag, xrt::bo &bo, int32_t len);

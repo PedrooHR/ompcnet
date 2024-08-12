@@ -30,21 +30,17 @@ switch $command {
 
 open_project build
 
-if {$do_cosim} {
-    add_files datamover.cpp -cflags "-std=c++14 -I. -I../include -DCOSIM"
-} else {
-    add_files datamover.cpp -cflags "-std=c++14 -I. -I../include"
-}
+add_files increment.cpp -cflags "-std=c++14 -I."
 
 if {$do_cosim} {
-    add_files -tb tb_datamover.cpp -cflags "-std=c++14 -I. -I../include"
+    add_files -tb tb_increment.cpp -cflags "-std=c++14 -I."
 }
 
-set_top datamover
+set_top increment
 
 open_solution sol1
 
-config_export -format xo -output [pwd]/../datamover.xo
+config_export -format xo -output [pwd]/../increment.xo
 
 if {$do_syn} {
     set_part $device

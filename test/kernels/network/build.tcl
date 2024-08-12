@@ -30,21 +30,21 @@ switch $command {
 
 open_project build
 
-if {$do_cosim} {
-    add_files datamover.cpp -cflags "-std=c++14 -I. -I../include -DCOSIM"
+if ($do_cosim) {
+    add_files network.cpp -cflags "-std=c++14 -I. -I../include -DCOSIM"
 } else {
-    add_files datamover.cpp -cflags "-std=c++14 -I. -I../include"
+    add_files network.cpp -cflags "-std=c++14 -I. -I../include"
 }
 
 if {$do_cosim} {
-    add_files -tb tb_datamover.cpp -cflags "-std=c++14 -I. -I../include"
+    add_files -tb tb_network.cpp -cflags "-std=c++14 -I. -I../include -DCOSIM"
 }
 
-set_top datamover
+set_top network
 
 open_solution sol1
 
-config_export -format xo -output [pwd]/../datamover.xo
+config_export -format xo -output [pwd]/../network.xo
 
 if {$do_syn} {
     set_part $device

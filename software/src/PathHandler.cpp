@@ -9,6 +9,7 @@ PathHandler::PathHandler(xrt::kernel path_kernel) : path_kernel(path_kernel) {
 
 PathHandler::~PathHandler() {
   is_finished = true;
+  execution_cv.notify_all();
   execution_thread.join();
 }
 

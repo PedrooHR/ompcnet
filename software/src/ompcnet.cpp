@@ -8,9 +8,21 @@ OMPCNet::OMPCNet(xrt::device device) : device(device) {
   net2app = new PathHandler(xrt::kernel(device, uuid, "net2app"));
 }
 
+OMPCNet::OMPCNet(xrt::device device, std::string app2net_name,
+                 std::string net2app_name)
+    : device(device) {
+  uuid = device.get_xclbin_uuid();
+
+  app2net = new PathHandler(xrt::kernel(device, uuid, app2net_name));
+  net2app = new PathHandler(xrt::kernel(device, uuid, net2app_name));
+}
+
 OMPCNet::~OMPCNet() {
   delete app2net;
   delete net2app;
+
+  for (auto entry : op_map)
+    delete entry.second;
 }
 
 void OMPCNet::Send(int32_t src, int32_t dst, int32_t tag, xrt::bo &bo,
