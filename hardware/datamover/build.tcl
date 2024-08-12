@@ -30,7 +30,11 @@ switch $command {
 
 open_project build
 
-add_files datamover.cpp -cflags "-std=c++14 -I. -I../include"
+if {$do_cosim} {
+    add_files datamover.cpp -cflags "-std=c++14 -I. -I../include -DCOSIM"
+} else {
+    add_files datamover.cpp -cflags "-std=c++14 -I. -I../include"
+}
 
 if {$do_cosim} {
     add_files -tb tb_datamover.cpp -cflags "-std=c++14 -I. -I../include"

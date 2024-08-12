@@ -19,7 +19,7 @@ int main() {
   data_word value;
 
   for (int i = 0; i < 128; i++) {
-    mm2s_axi[i] = 64;
+    mm2s_axi[i] = 64 + i;
     s2mm_axi[i] = 0;
   }
 
@@ -32,7 +32,7 @@ int main() {
   mm2s_cmd.write(command);
 
   for (int i = 0; i < 16; i++) {
-    value.data.range((i * 32) + 31, i * 32) = 32;
+    value.data.range((i * 32) + 31, i * 32) = 32 + i;
   }
 
   for (int i = 0; i < 8; i++) {
@@ -54,12 +54,13 @@ int main() {
 
   // check
   for (int i = 0; i < 128; i++)
-    if (s2mm_axi[i] != 32)
+    if (s2mm_axi[i] != (64 + i))
       sanity_check++;
 
-  for (int i = 0; i < 128; i++)
-    if (data_from_stream[i] != 64)
-      sanity_check++;
+  for (int i = 0; i < 8; i++)
+    for (int j = 0; j < 16; j++)
+      if (data_from_stream[i * 16 + j] != (32 + j))
+        sanity_check++;
 
   status.data = 0;
   status = s2mm_sts.read();

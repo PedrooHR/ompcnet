@@ -7,7 +7,7 @@ void s2mm(hls::stream<cmd_word> &s2mm_cmd,   // s2mm command stream
 ) {
   // parse command
   cmd_word cmd = s2mm_cmd.read();
-  ap_uint<64> address = cmd.data.range(63, 0);
+  ap_uint<64> address = cmd.data.range(63, 0) / 4;
   ap_uint<29> length = cmd.data.range(92, 64) / 64; 
   // length comes in bytes, axi is 4 bytes, dm stream is 64 bytes
 
@@ -35,7 +35,7 @@ void mm2s(hls::stream<cmd_word> &mm2s_cmd,   // mm2s command stream
 ) {
   // parse command
   cmd_word cmd = mm2s_cmd.read();
-  ap_uint<64> address = cmd.data.range(63, 0);
+  ap_uint<64> address = cmd.data.range(63, 0) / 4;
   ap_uint<29> length = cmd.data.range(92, 64) / 64;
   // length comes in bytes, axi is 4 bytes, dm stream is 64 bytes
 
@@ -78,7 +78,11 @@ void datamover(
 #pragma HLS INTERFACE axis port = s2mm_axis depth = 64
 #pragma HLS INTERFACE m_axi port = s2mm_axi depth = 128
   // Function return
+#ifndef COSIM
 #pragma HLS INTERFACE ap_ctrl_none port = return
+#else
+#pragma HLS INTERFACE s_axilite port = return
+#endif
 
 #pragma HLS DATAFLOW
   s2mm(s2mm_cmd, s2mm_sts, s2mm_axis, s2mm_axi);
