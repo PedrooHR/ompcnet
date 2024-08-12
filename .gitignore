@@ -3,3 +3,12 @@
 *.xo
 .vscode
 *.so
+*_x
+*.Xil
+*.xclbin*
+*emconfig.json
+*ext_metadata.json
+*.run
+*main
+*xsa.xml
+test/hw_emu/sw/ompcnet
