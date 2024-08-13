@@ -12,3 +12,4 @@
 *main
 *xsa.xml
 test/hw_emu/sw/ompcnet
+test/udp/hw/.ipcache/
