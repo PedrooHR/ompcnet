@@ -1,6 +1,6 @@
 CXX?=g++
 
-TARGETS=main
+TARGETS=ompcnet main
 
 CURRENT_DIR=$(shell pwd)
 
@@ -10,19 +10,19 @@ LIBRARIES=-lxrt_coreutil -luuid -lompcnet -pthread
 STANDARD=-std=c++17
 
 all: $(TARGETS) 
-.PHONY: ompcnet
+.PHONY: clean
 
 ompcnet: 
 	PREFIX=$(CURRENT_DIR)/ompcnet $(MAKE) -C ../../../software install
 
-main: *.cpp ompcnet
-	echo $(LD_LIBRARY_PATH)
+main: main.cpp 
 	$(CXX) $< $(INCLUDES_PATH) $(LIBRARIES_PATH) $(STANDARD) -o $@ $(LIBRARIES)
 
 clean:
 	rm -rf ompcnet
 	rm -rf .run
-	rm -rf *.json
-	rm -rf *.xml
+	rm -rf $(wildcard *.json)
+	rm -rf $(wildcard *.log)
+	rm -rf $(wildcard *.xml)
 	$(MAKE) -C ../../../software clean
-	rm $(TARGETS)
+	rm -rf $(TARGETS)

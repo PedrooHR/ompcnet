@@ -8,7 +8,7 @@ CONFIG_FILE?=hw_emu.cfg
 FREQUENCY?=250
 
 all: $(IPS) 
-.PHONY: $(IPS)
+.PHONY: clean
 
 hardware: 
 	$(MAKE) -C $(HW_PATH)
@@ -16,14 +16,14 @@ hardware:
 kernels:
 	$(MAKE) -C $(KERNELS_PATH)
 
-test.xclbin: #hardware kernels
-	v++ -l -t hw_emu --platform $(PLATFORM) --config $(CONFIG_FILE) --kernel_frequency $(FREQUENCY) $(HW_PATH)/*.xo $(KERNELS_PATH)/*.xo -o $@
+test.xclbin: $(wildcard $(HW_PATH)/*.xo) $(wildcard $(KERNELS_PATH)/*.xo)
+	v++ -l -t hw_emu --platform $(PLATFORM) --config $(CONFIG_FILE) --kernel_frequency $(FREQUENCY) $(wildcard $(HW_PATH)/*.xo) $(wildcard $(KERNELS_PATH)/*.xo) -o $@
 
 clean:
-	rm -rf *.log
-	rm -rf *.xml
-	rm -rf *_x
-	rm -rf *.Xil
-	rm -rf *.xclbin*
+	rm -rf $(wildcard *.log)
+	rm -rf $(wildcard *.xml)
+	rm -rf $(wildcard *_x)
+	rm -rf $(wildcard *.Xil)
+	rm -rf $(wildcard *.xclbin*)
 	$(MAKE) -C $(HW_PATH) clean
 	$(MAKE) -C $(KERNELS_PATH) clean
