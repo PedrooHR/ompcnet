@@ -1,11 +1,12 @@
 DEVICE=xcu55c-fsvh2892-2L-e
 TARGET=ip
 
-all: network
+all: ../network.xo
+.PHONY: clean
 
-network: build.tcl *.cpp *.h
+../network.xo: build.tcl $(wildcard *.cpp) $(wildcard *.h)
 	vitis_hls $< -tclargs $(TARGET) $(DEVICE)
 
 clean:
 	rm -rf build
-	rm -rf *.log
+	rm -rf $(wildcard *.log)

@@ -1,6 +1,6 @@
 CXX?=g++
 
-TARGETS=ompcnet
+TARGETS=libompcnet.so
 
 INCLUDES_PATH=-I$(XILINX_XRT)/include -I./include
 LIBRARIES_PATH=-L$(XILINX_XRT)/lib
@@ -9,18 +9,21 @@ STANDARD=-std=c++17
 PREFIX?=/usr/local
 
 all: $(TARGETS) 
-.PHONY: install
+.PHONY: clean install
 
-ompcnet: src/*.cpp include/*.h
-	$(CXX) -shared  $(INCLUDES_PATH) $(LIBRARIES_PATH) $(STANDARD) -fPIC $^ -o lib$@.so $(LIBRARIES)
+libompcnet.so: $(wildcard src/*.cpp) $(wildcard include/*.h)
+	$(CXX) -shared  $(INCLUDES_PATH) $(LIBRARIES_PATH) $(STANDARD) -fPIC $^ -o $@ $(LIBRARIES)
 
-install: ompcnet
-	install -d $(DESTDIR)$(PREFIX)/lib/
-	install -m 644 *.so $(DESTDIR)$(PREFIX)/lib/
-	install -d $(DESTDIR)$(PREFIX)/include/
-	install -m 644 include/*.h $(DESTDIR)$(PREFIX)/include/
-	install -d $(DESTDIR)$(PREFIX)/include/ompcnet
-	install -m 644 include/ompcnet/*.h $(DESTDIR)$(PREFIX)/include/ompcnet
+install-lib: libompcnet.so
+	mkdir -p $(DESTDIR)$(PREFIX)/lib/
+	cp -r $< $(DESTDIR)$(PREFIX)/lib/
+
+install-include: $(wildcard include/*)
+	mkdir -p $(DESTDIR)$(PREFIX)/include/
+	cp -r $^ $(DESTDIR)$(PREFIX)/include/
+
+install: install-lib install-include
+	echo "Installing Software Driver"
 
 clean:
-	rm *.so
+	rm -rf *.so

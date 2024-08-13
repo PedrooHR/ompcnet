@@ -1,11 +1,13 @@
 DEVICE=xcu55c-fsvh2892-2L-e
 TARGET=ip
 
-all: datamover
+all: ../datamover.xo
+.PHONY: clean
 
-datamover: build.tcl *.cpp *.h
+../datamover.xo: build.tcl $(wildcard *.cpp) $(wildcard *.h)
 	vitis_hls $< -tclargs $(TARGET) $(DEVICE)
 
 clean:
 	rm -rf build
-	rm -rf *.log
+	rm -rf ../datamover.xo
+	rm -rf $(wildcard *.log)

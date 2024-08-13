@@ -1,11 +1,12 @@
 DEVICE=xcu55c-fsvh2892-2L-e
 TARGET=ip
 
-all: increment
+all: ../increment.xo
+.PHONY: clean
 
-increment: build.tcl *.cpp *.h
+../increment.xo: build.tcl $(wildcard *.cpp) $(wildcard *.h)
 	vitis_hls $< -tclargs $(TARGET) $(DEVICE)
 
 clean:
 	rm -rf build
-	rm -rf *.log
+	rm -rf $(wildcard *.log)
