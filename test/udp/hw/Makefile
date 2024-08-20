@@ -11,6 +11,13 @@ XCLBIN=test.xclbin
 
 HAS_HBM?=yes
 
+# OMPCNET XOS
+APP2NET_XO 		= $(HW_PATH)/app2net.xo
+NET2APP_XO 		= $(HW_PATH)/net2app.xo
+DATAMOVER_XO 	= $(HW_PATH)/datamover.xo
+INCREMENT_XO 	= $(KERNELS_PATH)/increment.xo
+EVERY_XO = $(NET2APP_XO) $(APP2NET_XO) $(DATAMOVER_XO) $(INCREMENT_XO)
+
 ## VNX Configs
 VNX=xup_vitis_network_example
 
@@ -18,7 +25,7 @@ NETLAYERDIR = $(VNX)/NetLayers
 CMACDIR     = $(VNX)/Ethernet
 NETLAYERHLS = $(NETLAYERDIR)/100G-fpga-network-stack-core
 ETH_IF=0
-CMAC_UDP_XO=$(VNX)/Ethernet/_x.$(PLATFORM)/cmac_$(ETH_IF).xo
+CMAC_UDP_XO = $(VNX)/Ethernet/_x.$(PLATFORM)/cmac_$(ETH_IF).xo
 UDP_XO=$(VNX)/NetLayers/_x.$(PLATFORM)/networklayer.xo
 NETLAYERXML = $(NETLAYERDIR)/kernel.xml
 
@@ -67,8 +74,8 @@ $(UDP_XO): $(NETLAYERXML)
 	git submodule update --init --recursive $(VNX)
 	$(MAKE) -C $(NETLAYERDIR) DEVICE=$(PLATFORM) all
 
-$(XCLBIN): $(wildcard $(HW_PATH)/*.xo) $(wildcard $(KERNELS_PATH)/*.xo) $(NET_XO) $(CONFIG_FILE)
-	v++ --link --platform $(PLATFORM) --kernel_frequency $(FREQUENCY) $(CONFIG) -o $@ $(wildcard $(HW_PATH)/*.xo) $(wildcard $(KERNELS_PATH)/*.xo) $(NET_XO) 
+$(XCLBIN): $(EVERY_XO) $(NET_XO) $(CONFIG_FILE)
+	v++ --link --platform $(PLATFORM) --kernel_frequency $(FREQUENCY) $(CONFIG) -o $@ $(EVERY_XO) $(NET_XO) 
 
 clean:
 	rm -rf $(wildcard *.log)

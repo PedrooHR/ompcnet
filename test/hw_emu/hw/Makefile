@@ -4,6 +4,14 @@ IPS=hardware kernels test.xclbin
 HW_PATH=../../../hardware
 KERNELS_PATH=../../kernels
 
+APP2NET_XO 		= $(HW_PATH)/app2net.xo
+NET2APP_XO 		= $(HW_PATH)/net2app.xo
+DATAMOVER_XO 	= $(HW_PATH)/datamover.xo
+INCREMENT_XO 	= $(KERNELS_PATH)/increment.xo
+NETWORK_XO 	= $(KERNELS_PATH)/network.xo
+
+EVERY_XO = $(APP2NET_XO) $(NET2APP_XO) $(DATAMOVER_XO) $(INCREMENT_XO) $(NETWORK_XO)
+
 CONFIG_FILE?=hw_emu.cfg
 FREQUENCY?=250
 
@@ -16,8 +24,8 @@ hardware:
 kernels:
 	$(MAKE) -C $(KERNELS_PATH)
 
-test.xclbin: $(wildcard $(HW_PATH)/*.xo) $(wildcard $(KERNELS_PATH)/*.xo)
-	v++ -l -t hw_emu --platform $(PLATFORM) --config $(CONFIG_FILE) --kernel_frequency $(FREQUENCY) $(wildcard $(HW_PATH)/*.xo) $(wildcard $(KERNELS_PATH)/*.xo) -o $@
+test.xclbin: $(EVERY_XO)
+	v++ -l -t hw_emu --platform $(PLATFORM) --config $(CONFIG_FILE) --kernel_frequency $(FREQUENCY) $(EVERY_XO) -o $@
 
 clean:
 	rm -rf $(wildcard *.log)

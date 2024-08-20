@@ -4,8 +4,8 @@ namespace ompcnet {
 OMPCNet::OMPCNet(xrt::device device) : device(device) {
   uuid = device.get_xclbin_uuid();
 
-  app2net = new PathHandler(xrt::kernel(device, uuid, "app2net"));
-  net2app = new PathHandler(xrt::kernel(device, uuid, "net2app"));
+  app2net = new PathHandler(xrt::kernel(device, uuid, "app2net"), PH_TYPE::TX);
+  net2app = new PathHandler(xrt::kernel(device, uuid, "net2app"), PH_TYPE::RX);
 }
 
 OMPCNet::OMPCNet(xrt::device device, std::string app2net_name,
@@ -13,8 +13,10 @@ OMPCNet::OMPCNet(xrt::device device, std::string app2net_name,
     : device(device) {
   uuid = device.get_xclbin_uuid();
 
-  app2net = new PathHandler(xrt::kernel(device, uuid, app2net_name));
-  net2app = new PathHandler(xrt::kernel(device, uuid, net2app_name));
+  app2net =
+      new PathHandler(xrt::kernel(device, uuid, app2net_name), PH_TYPE::TX);
+  net2app =
+      new PathHandler(xrt::kernel(device, uuid, net2app_name), PH_TYPE::RX);
 }
 
 OMPCNet::~OMPCNet() {

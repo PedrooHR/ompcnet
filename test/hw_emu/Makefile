@@ -16,7 +16,7 @@ gen_hw_emu:
 	emconfigutil --nd 1 --platform $(PLATFORM) --od ./sw
 
 test-emu:
-	XCL_EMULATION_MODE=hw_emu ./sw/main $(CURRENT_DIR)/hw/test.xclbin
+  XCL_EMULATION_MODE=hw_emu ./sw/main $(CURRENT_DIR)/hw/test.xclbin
 
 clean:
 	rm -rf *.xo

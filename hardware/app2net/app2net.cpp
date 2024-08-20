@@ -36,6 +36,8 @@ void app2net(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
 
   ap_uint<32> npackets = len / 64;
 
+  handshake();
+  
   switch (op) {
     /*
       Send Operation:
@@ -50,15 +52,19 @@ void app2net(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
     // network packet
     net_data.dest = dst;
     net_data.last = 0;
+    net_data.keep = -1; // Enable all bytes
 
     // data attribution
     ap_uint<5> packet_idx = 0;
   send_loop:
     for (ap_uint<32> i = 0; i < npackets; i++) { // in bytes
 #pragma HLS pipeline II = 1
-      packet_idx = packet_idx + 1;
       net_data.data = dm_out.read().data;
-      if (packet_idx >= 22 || i == (npackets - 1)) {
+      if (packet_idx < 21 && i < (npackets - 1)) {
+        // still in the packet
+        net_data.last = 0;
+        packet_idx = packet_idx + 1;
+      } else {
         // end of the packet (1408b)
         net_data.last = 1;
         packet_idx = 0;
@@ -75,15 +81,19 @@ void app2net(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
   case OPERATION::stream_to: {
     net_data.dest = dst;
     net_data.last = 0;
+    net_data.keep = -1; // Enable all bytes
 
     // data attribution
     ap_uint<5> packet_idx = 0;
   stream_to_loop:
     for (ap_uint<32> i = 0; i < npackets; i++) { // in bytes
 #pragma HLS pipeline II = 1
-      packet_idx = packet_idx + 1;
       net_data.data = application.read().data;
-      if (packet_idx >= 22 || i == (npackets - 1)) {
+      if (packet_idx < 21 && i < (npackets - 1)) {
+        // still in the packet
+        net_data.last = 0;
+        packet_idx = packet_idx + 1;
+      } else {
         // end of the packet (1408b)
         net_data.last = 1;
         packet_idx = 0;

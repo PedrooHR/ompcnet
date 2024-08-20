@@ -11,5 +11,6 @@
 *.run
 *main
 *xsa.xml
+*.ltx
 test/hw_emu/sw/ompcnet
 test/udp/hw/.ipcache/

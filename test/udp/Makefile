@@ -12,6 +12,9 @@ hardware:
 software:
 	$(MAKE) -C ./sw
 
+test:
+	./sw/main $(CURRENT_DIR)/hw/test.xclbin
+
 clean:
 	rm -rf *.xo
 	rm -rf *.log
