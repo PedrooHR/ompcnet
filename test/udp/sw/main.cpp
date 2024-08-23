@@ -307,6 +307,7 @@ void FPGA_1(std::string xclbin_file) {
   int *input_buffer;
   int *output_buffer;
 
+
   // Test 1
   for (int i = 0; i < REPLAYS; i++) {
     input_buffer = create_buffer(1, len);
@@ -325,7 +326,7 @@ void FPGA_1(std::string xclbin_file) {
     std::this_thread::sleep_for(100ms);
   }
 
-/*
+
   // Test 3
   for (int i = 0; i < REPLAYS; i++) {
     input_buffer = create_buffer(1, len);
@@ -333,7 +334,7 @@ void FPGA_1(std::string xclbin_file) {
     delete input_buffer;
     std::this_thread::sleep_for(100ms);
   }
-*/
+
 /*
   // Test VNX
   for (int i = 0; i < REPLAYS; i++) {
@@ -378,6 +379,7 @@ void FPGA_2(std::string xclbin_file) {
   int *input_buffer;
   int *output_buffer;
 
+
   // Test 1
   for (int i = 0; i < REPLAYS; i++) {
     input_buffer = create_buffer(1, len);
@@ -395,7 +397,7 @@ void FPGA_2(std::string xclbin_file) {
     delete output_buffer;
   }
 
-/*
+
   // Test 3
   for (int i = 0; i < REPLAYS; i++) {
     output_buffer = create_buffer(0, len);
@@ -403,7 +405,7 @@ void FPGA_2(std::string xclbin_file) {
     delete output_buffer;
     std::this_thread::sleep_for(100ms);
   }
-*/
+
 
   std::this_thread::sleep_for(11s);
   vnx::stats_t stats = cmac->statistics(true);

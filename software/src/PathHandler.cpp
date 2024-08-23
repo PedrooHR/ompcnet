@@ -37,7 +37,7 @@ void PathHandler::ProcessQueue() {
     if (type == PH_TYPE::RX)
       RX_Executor(op);
     else
-      TX_Executor(op);
+      RX_Executor(op);
     op->setStatus(STATUS::COMPLETED);
   } while (!is_finished);
 }

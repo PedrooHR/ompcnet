@@ -35,8 +35,6 @@ void app2net(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
   sts_word status;
 
   ap_uint<32> npackets = len / 64;
-
-  handshake();
   
   switch (op) {
     /*

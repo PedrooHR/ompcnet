@@ -18,7 +18,7 @@ enum OPERATION {
 #define command_len(x)      x.data.range( 92,  64)
 
 // Stream pkt definitions
-typedef ap_uint<32> mem_word;
+typedef ap_uint<512> mem_word;
 typedef ap_axiu<512, 0, 0, 0> application_word;
 typedef ap_axiu<512, 0, 0, 0> data_word;
 typedef ap_axiu<512, 1, 1, 16> network_word;
