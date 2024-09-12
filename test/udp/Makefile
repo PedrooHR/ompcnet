@@ -12,7 +12,7 @@ hardware:
 software:
 	$(MAKE) -C ./sw
 
-test:
+test: software
 	./sw/main $(CURRENT_DIR)/hw/test.xclbin
 
 clean:

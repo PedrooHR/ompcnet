@@ -22,7 +22,7 @@ using namespace std::chrono_literals;
 /**                              GLOBAL CONFIGS                              **/
 
 #define PACKET_INTS   352
-#define N_PACKETS     10
+#define N_PACKETS     1
 #define REPLAYS       1
 
 /**==========================================================================**/
@@ -197,7 +197,7 @@ void MemRecv(xrt::device dev, int32_t *output, int32_t size,
   for (int i = 0; i < size; i++)
     if (output[i] != 2)
       errors++;
-
+      
   printf("[Board %d] - Test 2: Number of errors: %d\n", board_idx, errors);
 }
 
@@ -262,26 +262,6 @@ void StreamRecv_MemSend(xrt::device dev, xrt::kernel increment, int32_t *output,
 }
 
 /**==========================================================================**/
-/**                                  Test 4                                  **/
-void MemSendVNX(xrt::device dev, int32_t *input, int32_t size, int32_t board_idx) {
-  // create OMPC Net Objec
-  xrt::uuid uuid = dev.get_xclbin_uuid();
-  xrt::kernel k = xrt::kernel(dev, uuid, "krnl_mm2s:{krnl_mm2s_0}");
-  xrt::run r(k);
-
-  // Create Input Buffers
-  xrt::bo bo = xrt::bo(dev, input, size * 4, xrt::bo::flags::normal, 0);
-  bo.sync(XCL_BO_SYNC_BO_TO_DEVICE);
-
-  r.set_arg(0, bo);
-  r.set_arg(2, size * 4);
-  r.set_arg(3, 1);
-
-  r.start();
-  r.wait();
-}
-
-/**==========================================================================**/
 /**                                   FPGA                                   **/
 void FPGA_1(std::string xclbin_file) {
   // Global Configs
@@ -323,27 +303,18 @@ void FPGA_1(std::string xclbin_file) {
     input_buffer = create_buffer(2, len);
     MemSend(dev, input_buffer, len, 0);
     delete input_buffer;
-    std::this_thread::sleep_for(100ms);
   }
 
-
+/*
   // Test 3
   for (int i = 0; i < REPLAYS; i++) {
     input_buffer = create_buffer(1, len);
     MemRecv_StreamSend(dev, increment, input_buffer, len, 0);
     delete input_buffer;
-    std::this_thread::sleep_for(100ms);
-  }
-
-/*
-  // Test VNX
-  for (int i = 0; i < REPLAYS; i++) {
-    input_buffer = create_buffer(2, len);
-    MemSendVNX(dev, input_buffer, len, 0);
-    delete input_buffer;
   }
 */
-  std::this_thread::sleep_for(10s);
+
+  std::this_thread::sleep_for(2s);
   vnx::stats_t stats = cmac->statistics(true);
   for (auto entry : stats.tx) {
     printf("Board 0: %s = %u\n", entry.first.c_str(), entry.second);
@@ -351,7 +322,10 @@ void FPGA_1(std::string xclbin_file) {
   printf("Board 0: Packets out: %d\n", network_layer->get_udp_out_pkts());
   printf("Board 0: APP Packets out: %d\n",
          network_layer->get_udp_app_out_pkts());
+  printf("Board 0: Packets in: %d\n", network_layer->get_udp_in_pkts());
+  printf("Board 0: APP Packets in: %d\n", network_layer->get_udp_app_in_pkts());
   printf("\n");
+
 }
 
 void FPGA_2(std::string xclbin_file) {
@@ -397,23 +371,26 @@ void FPGA_2(std::string xclbin_file) {
     delete output_buffer;
   }
 
-
+/*
   // Test 3
   for (int i = 0; i < REPLAYS; i++) {
     output_buffer = create_buffer(0, len);
     StreamRecv_MemSend(dev, increment, output_buffer, len, 1);
     delete output_buffer;
-    std::this_thread::sleep_for(100ms);
   }
+*/
 
-
-  std::this_thread::sleep_for(11s);
+  std::this_thread::sleep_for(3s);
   vnx::stats_t stats = cmac->statistics(true);
   for (auto entry : stats.rx) {
     printf("Board 1: %s = %u\n", entry.first.c_str(), entry.second);
   }
+  printf("Board 1: Packets out: %d\n", network_layer->get_udp_out_pkts());
+  printf("Board 1: APP Packets out: %d\n",
+         network_layer->get_udp_app_out_pkts());
   printf("Board 1: Packets in: %d\n", network_layer->get_udp_in_pkts());
   printf("Board 1: APP Packets in: %d\n", network_layer->get_udp_app_in_pkts());
+
 }
 
 /**==========================================================================**/

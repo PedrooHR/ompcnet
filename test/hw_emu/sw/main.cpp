@@ -86,12 +86,12 @@ void MemRecv_StreamSend(xrt::device dev, xrt::kernel increment, int32_t *input,
   r.start();
   r.wait();
 
-  std::this_thread::sleep_for(1s);
+  while (!ompc.isOperationComplete(0))
+    ;
+  while (!ompc.isOperationComplete(1))
+    ;
 
-  if (ompc.isOperationComplete(0))
-    printf("Mem2Stream completed on MemRecv_StreamSend\n");
-  if (ompc.isOperationComplete(1))
-    printf("StreamTo completed on MemRecv_StreamSend\n");
+  printf("[Thread 1] Completed\n");
 }
 
 void StreamRecv_StreamSend(xrt::device dev, xrt::kernel increment, int size,
@@ -109,12 +109,12 @@ void StreamRecv_StreamSend(xrt::device dev, xrt::kernel increment, int size,
   r.start();
   r.wait();
 
-  std::this_thread::sleep_for(1s);
+  while (!ompc.isOperationComplete(0))
+    ;
+  while (!ompc.isOperationComplete(1))
+    ;
 
-  if (ompc.isOperationComplete(0))
-    printf("StreamFrom completed on StreamRecv_StreamSend\n");
-  if (ompc.isOperationComplete(1))
-    printf("StreamTo completed on StreamRecv_StreamSend\n");
+  printf("[Thread 2] Completed\n");
 }
 
 void StreamRecv_MemSend(xrt::device dev, xrt::kernel increment, int32_t *input,
@@ -136,12 +136,10 @@ void StreamRecv_MemSend(xrt::device dev, xrt::kernel increment, int32_t *input,
   r.start();
   r.wait();
 
-  std::this_thread::sleep_for(1s);
-
-  if (ompc.isOperationComplete(0))
-    printf("StreamFrom completed on StreamRecv_MemSend\n");
-  if (ompc.isOperationComplete(1))
-    printf("Stream2Mem completed on StreamRecv_MemSend\n");
+  while (!ompc.isOperationComplete(0))
+    ;
+  while (!ompc.isOperationComplete(1))
+    ;
 
   bo.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
 
@@ -150,7 +148,71 @@ void StreamRecv_MemSend(xrt::device dev, xrt::kernel increment, int32_t *input,
     if (output[i] != (input[i] + 3))
       errors++;
 
-  printf("Number of errors: %d\n", errors);
+  printf("[Thread 3] Number of errors: %d\n", errors);
+
+  printf("[Thread 3] Completed\n");
+}
+
+void Send(xrt::device dev, int32_t *input, int32_t *output, int size,
+          std::string app2net, std::string net2app) {
+  // create OMPC Net Object
+  ompcnet::OMPCNet ompc(dev, app2net, net2app);
+
+  // Create Input Buffers
+  xrt::bo bo1 = xrt::bo(dev, input, size * 4, xrt::bo::flags::normal, 0);
+  bo1.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+  xrt::bo bo2 = xrt::bo(dev, output, size * 4, xrt::bo::flags::normal, 0);
+
+  // Dispatch OMPC Operations
+  ompc.Send(0, 1, 0, bo1, size * sizeof(int));
+  ompc.Recv(1, 0, 1, bo2, size * sizeof(int));
+
+  while (!ompc.isOperationComplete(0))
+    ;
+  while (!ompc.isOperationComplete(1))
+    ;
+
+  bo2.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+
+  int errors = 0;
+  for (int i = 0; i < size; i++)
+    if (output[i] != 1)
+      errors++;
+
+  printf("[Thread 1] Number of errors: %d\n", errors);
+
+  printf("[Thread 1] completed\n");
+}
+
+void Recv(xrt::device dev, int32_t *output, int32_t *input, int size,
+          std::string app2net, std::string net2app) {
+  // create OMPC Net Object
+  ompcnet::OMPCNet ompc(dev, app2net, net2app);
+
+  // Create output Buffers
+  xrt::bo bo1 = xrt::bo(dev, input, size * 4, xrt::bo::flags::normal, 0);
+  bo1.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+  xrt::bo bo2 = xrt::bo(dev, output, size * 4, xrt::bo::flags::normal, 0);
+
+  // Dispatch OMPC Operations
+  ompc.Recv(0, 1, 0, bo2, size * sizeof(int));
+  ompc.Send(1, 0, 1, bo1, size * sizeof(int));
+
+  while (!ompc.isOperationComplete(0))
+    ;
+  while (!ompc.isOperationComplete(1))
+    ;
+
+  bo2.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+
+  int errors = 0;
+  for (int i = 0; i < size; i++)
+    if (output[i] != 1)
+      errors++;
+
+  printf("[Thread 2] Number of errors: %d\n", errors);
+
+  printf("[Thread 2] completed\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -161,7 +223,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Global Configs
-  int len = 16;
+  int len = 352;
   int len_bytes = len * sizeof(int);
 
   // FPGA global configs
@@ -175,16 +237,19 @@ int main(int argc, char *argv[]) {
 
   // Test 1 - mem -> kernel 1 -> kernel 2 -> kernel 3 -> mem
   int *test1_input = create_buffer(1, len);
+  int *test2_input = create_buffer(1, len);
   int *test1_output = create_buffer(0, len);
+  int *test2_output = create_buffer(0, len);
 
-  // test 1
-  Mem2Kernel2Mem(dev, increment_0, test1_input, test1_output, len,
-                 "app2net:{app2net_0}", "net2app:{net2app_0}");
-  Mem2Kernel2Mem(dev, increment_1, test1_input, test1_output, len,
-                 "app2net:{app2net_1}", "net2app:{net2app_1}");
-  Mem2Kernel2Mem(dev, increment_2, test1_input, test1_output, len,
-                 "app2net:{app2net_2}", "net2app:{net2app_2}");
-
+  /*
+    // test 1
+    Mem2Kernel2Mem(dev, increment_0, test1_input, test1_output, len,
+                   "app2net:{app2net_0}", "net2app:{net2app_0}");
+    Mem2Kernel2Mem(dev, increment_1, test1_input, test1_output, len,
+                   "app2net:{app2net_1}", "net2app:{net2app_1}");
+    Mem2Kernel2Mem(dev, increment_2, test1_input, test1_output, len,
+                   "app2net:{app2net_2}", "net2app:{net2app_2}");
+*/
   // test 2
   std::thread t1(MemRecv_StreamSend, dev, increment_0, test1_input, len,
                  "app2net:{app2net_0}", "net2app:{net2app_0}");
@@ -197,6 +262,14 @@ int main(int argc, char *argv[]) {
   t1.join();
   t2.join();
   t3.join();
+  /*
+    std::thread t1(Send, dev, test1_input, test2_output, len,
+                   "app2net:{app2net_0}", "net2app:{net2app_0}");
+    std::thread t2(Recv, dev, test1_output, test2_input, len,
+                   "app2net:{app2net_1}", "net2app:{net2app_1}");
+    t1.join();
+    t2.join();
+  */
 
   delete test1_input;
   delete test1_output;

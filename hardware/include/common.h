@@ -13,14 +13,27 @@ enum OPERATION {
   mem2stream  = 0b110,
 };
 
+enum ARB_OPERATION { // 8 bits
+  nop         = 0x0,
+  stall_start = 0x11,
+  stall_stop  = 0x21,
+  tx_request  = 0x31,
+  rx_response = 0x41,
+};
+
 // Macros for cmd word
 #define command_address(x)  x.data.range( 63,   0)
 #define command_len(x)      x.data.range( 92,  64)
 
-// Stream pkt definitions
+// Internal types (HLS interface does not handle ap_axi* types)
 typedef ap_uint<512> mem_word;
+typedef ap_uint<512> wide_word;
+typedef ap_uint<512> arbiter_payload;
+
+// Interface types
+typedef ap_axiu<512, 0, 0, 16> handshake_word;
 typedef ap_axiu<512, 0, 0, 0> application_word;
 typedef ap_axiu<512, 0, 0, 0> data_word;
-typedef ap_axiu<512, 1, 1, 16> network_word;
+typedef ap_axiu<512, 0, 0, 16> network_word;
 typedef ap_axiu<93, 0, 0, 0> cmd_word;
 typedef ap_axiu<1, 0, 0, 0> sts_word;

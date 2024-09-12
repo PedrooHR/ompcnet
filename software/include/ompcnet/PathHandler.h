@@ -32,8 +32,7 @@ private:
   std::atomic<bool> is_finished;
 
   void ProcessQueue();
-  void RX_Executor(OPHandler *op);
-  void TX_Executor(OPHandler *op);
+  void Executor(OPHandler *op);
 
 public:
   PathHandler(xrt::kernel path_kernel, PH_TYPE type);

@@ -15,6 +15,7 @@ HAS_HBM?=yes
 APP2NET_XO 		= $(HW_PATH)/app2net.xo
 NET2APP_XO 		= $(HW_PATH)/net2app.xo
 DATAMOVER_XO 	= $(HW_PATH)/datamover.xo
+ARBITER_XO 	= $(HW_PATH)/arbiter.xo
 INCREMENT_XO 	= $(KERNELS_PATH)/increment.xo
 EVERY_XO = $(NET2APP_XO) $(APP2NET_XO) $(DATAMOVER_XO) $(INCREMENT_XO)
 
@@ -78,10 +79,12 @@ $(XCLBIN): $(EVERY_XO) $(NET_XO) $(CONFIG_FILE)
 	v++ --link --platform $(PLATFORM) --kernel_frequency $(FREQUENCY) $(CONFIG) -o $@ $(EVERY_XO) $(NET_XO) 
 
 clean:
-	rm -rf $(wildcard *.log)
-	rm -rf $(wildcard *.xml)
-	rm -rf $(wildcard *_x)
-	rm -rf $(wildcard *.Xil)
-	rm -rf $(wildcard *.xclbin*)
+	rm -rf *.log
+	rm -rf *.xml
+	rm -rf *_x
+	rm -rf *.Xil
+	rm -rf *.ipcache
+	rm -rf *.xclbin*
+	rm -rf *.ltx
 	$(MAKE) -C $(HW_PATH) clean
 	$(MAKE) -C $(KERNELS_PATH) clean

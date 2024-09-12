@@ -6,9 +6,16 @@ bool cmd_checker(cmd_word cmd, ap_uint<64> add, ap_uint<29> len) {
   return is_correct;
 }
 
-void pre_recv(int recv_value, ap_uint<29> len, hls::stream<sts_word> &s2mm_sts,
+void pre_recv(int recv_value, ap_uint<29> len,
+              hls::stream<handshake_word> &s_arbiter_hs,
+              hls::stream<sts_word> &s2mm_sts,
               hls::stream<network_word> &network) {
   ap_uint<29> len_bytes = len * sizeof(int);
+
+  // confirm handshake - bit 63 should be 1
+  handshake_word hs_data;
+  hs_data.data.bit(63) = 1;
+  s_arbiter_hs.write(hs_data);
 
   // send data - stream is 512 bits - len is in bytes - mem buffers have 4 bytes
   network_word net_data;
@@ -27,9 +34,22 @@ void pre_recv(int recv_value, ap_uint<29> len, hls::stream<sts_word> &s2mm_sts,
 }
 
 int post_recv(int recv_value, int *output_buffer, ap_uint<29> len,
+              hls::stream<handshake_word> &m_arbiter_hs,
               hls::stream<cmd_word> &s2mm_cmd, hls::stream<data_word> &dm_in) {
   int sanity_checker = 0;
   ap_uint<29> len_bytes = len * sizeof(int);
+
+  // Check handshake
+  ap_uint<16> src = 1;
+  ap_uint<16> dst = -1;
+  ap_uint<3> op = 0b010;
+  handshake_word hs_data;
+  hs_data = m_arbiter_hs.read();
+  if (src != hs_data.data.range(15, 0) || dst != hs_data.data.range(31, 16) ||
+      len_bytes != hs_data.data.range(60, 32) ||
+      op != hs_data.data.range(63, 61))
+    sanity_checker++;
+
   // Checks the datamover command the kernel should send
   command_word command = s2mm_cmd.read();
   if (!cmd_check(command, 0x1024, len_bytes))
@@ -53,8 +73,14 @@ int post_recv(int recv_value, int *output_buffer, ap_uint<29> len,
 }
 
 void pre_stream_from(int stream_value, ap_uint<29> len,
+                     hls::stream<handshake_word> &s_arbiter_hs,
                      hls::stream<network_word> &network) {
   ap_uint<29> len_bytes = len * sizeof(int);
+
+  // confirm handshake - bit 63 should be 1
+  handshake_word hs_data;
+  hs_data.data.bit(63) = 1;
+  s_arbiter_hs.write(hs_data);
 
   // send data - stream is 512 bits - len is in bytes - mem buffers have 4 bytes
   network_word net_data;
@@ -68,9 +94,21 @@ void pre_stream_from(int stream_value, ap_uint<29> len,
 }
 
 int post_stream_from(int stream_value, int *output_buffer, ap_uint<29> len,
+                     hls::stream<handshake_word> &m_arbiter_hs,
                      hls::stream<application_word> &application) {
   int sanity_checker = 0;
   ap_uint<29> len_bytes = len * sizeof(int);
+
+  // Check handshake
+  ap_uint<16> src = 1;
+  ap_uint<16> dst = -1;
+  ap_uint<3> op = 0b100;
+  handshake_word hs_data;
+  hs_data = m_arbiter_hs.read();
+  if (src != hs_data.data.range(15, 0) || dst != hs_data.data.range(31, 16) ||
+      len_bytes != hs_data.data.range(60, 32) ||
+      op != hs_data.data.range(63, 61))
+    sanity_checker++;
 
   // Receive data - follows the same idea of sending data, as network is 512
   // bits also
@@ -143,6 +181,8 @@ int main() {
   // streams
   hls::stream<application_word> application("application");
   hls::stream<network_word> network("network");
+  hls::stream<handshake_word> m_arbiter_hs("m_arbiter_hs");
+  hls::stream<handshake_word> s_arbiter_hs("s_arbiter_hs");
   hls::stream<cmd_word> mm2s_cmd("mm2s_cmd");
   hls::stream<sts_word> mm2s_sts("mm2s_sts");
   hls::stream<cmd_word> s2mm_cmd("s2mm_cmd");
@@ -163,21 +203,26 @@ int main() {
   }
 
   // Test Recv
-  pre_recv(1, len, s2mm_sts, network);
+  pre_recv(1, len, s_arbiter_hs, s2mm_sts, network);
   net2app(1, -1, OPERATION::recv, 0x1024, len_bytes, application, network,
-          mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, dm_in, dm_out);
-  sanity_checker += post_recv(1, recv_buffer, len, s2mm_cmd, dm_in);
+          m_arbiter_hs, s_arbiter_hs, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts,
+          dm_in, dm_out);
+  sanity_checker +=
+      post_recv(1, recv_buffer, len, m_arbiter_hs, s2mm_cmd, dm_in);
 
   // Test Stream From
-  pre_stream_from(2, len, network);
+  pre_stream_from(2, len, s_arbiter_hs, network);
   net2app(1, -1, OPERATION::stream_from, 0, len_bytes, application, network,
-          mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, dm_in, dm_out);
-  sanity_checker += post_stream_from(2, stream_from_buffer, len, application);
+          m_arbiter_hs, s_arbiter_hs, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts,
+          dm_in, dm_out);
+  sanity_checker +=
+      post_stream_from(2, stream_from_buffer, len, m_arbiter_hs, application);
 
   // Test Mem 2 Stream
   pre_mem2stream(3, len, mm2s_sts, dm_out);
   net2app(-1, -1, OPERATION::mem2stream, 0x2048, len_bytes, application,
-          network, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, dm_in, dm_out);
+          network, m_arbiter_hs, s_arbiter_hs, mm2s_cmd, mm2s_sts, s2mm_cmd,
+          s2mm_sts, dm_in, dm_out);
   sanity_checker +=
       post_mem2stream(3, mem2stream_buffer, len, mm2s_cmd, application);
 

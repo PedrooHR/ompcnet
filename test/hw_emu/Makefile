@@ -4,7 +4,7 @@ TARGETS=hardware software gen_hw_emu
 CURRENT_DIR=$(shell pwd)
 
 all: $(TARGETS) 
-.PHONY: clean test-emu
+.PHONY: clean test_emu
 
 hardware: 
 	$(MAKE) -C ./hw
@@ -15,8 +15,8 @@ software:
 gen_hw_emu:
 	emconfigutil --nd 1 --platform $(PLATFORM) --od ./sw
 
-test-emu:
-  XCL_EMULATION_MODE=hw_emu ./sw/main $(CURRENT_DIR)/hw/test.xclbin
+test_emu: software
+	XCL_EMULATION_MODE=hw_emu ./sw/main $(CURRENT_DIR)/hw/test.xclbin
 
 clean:
 	rm -rf *.xo

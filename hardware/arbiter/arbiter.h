@@ -4,13 +4,16 @@
 
 #include "common.h"
 
-void arbiter(
-    /* app2net */
-    hls::stream<handshake_word> &m_tx_handshake, // Master TX Handshake
-    hls::stream<handshake_word> &s_tx_handshake, // Slave TX Handshake
-    hls::stream<network_word> &tx_network,       // Connection to Netlayer
-    /* net2app */
-    hls::stream<handshake_word> &m_rx_handshake, // Master RX Handshake
-    hls::stream<handshake_word> &s_rx_handshake, // Slave RX Handshake
-    hls::stream<network_word> &rx_network,       // Connection from Netlayer
-);
+constexpr unsigned PACKET_SIZE = 22;
+constexpr unsigned RX_FIFO_DEPTH = PACKET_SIZE * 100;
+constexpr unsigned THRESHOLD_MAX = RX_FIFO_DEPTH - (PACKET_SIZE * 10);
+constexpr unsigned THRESHOLD_MIN = PACKET_SIZE * 10;
+
+void arbiter(hls::stream<network_word> &app2net_data_tx,
+             hls::stream<network_word> &net2app_data_rx,
+             hls::stream<network_word> &network_tx,
+             hls::stream<network_word> &network_rx,
+             hls::stream<handshake_word> &app2net_hs_tx,
+             hls::stream<handshake_word> &app2net_hs_rx,
+             hls::stream<handshake_word> &net2app_hs_tx,
+             hls::stream<handshake_word> &net2app_hs_rx);

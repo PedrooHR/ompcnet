@@ -6,12 +6,12 @@
 
 namespace ompcnet {
 enum OPERATION {
-  send = 0b001,
-  recv = 0b010,
-  stream_to = 0b011,
+  send        = 0b001,
+  recv        = 0b010,
+  stream_to   = 0b011,
   stream_from = 0b100,
-  stream2mem = 0b101,
-  mem2stream = 0b110,
+  stream2mem  = 0b101,
+  mem2stream  = 0b110,
 };
 
 enum ARGPOS {

@@ -14,3 +14,4 @@
 *.ltx
 test/hw_emu/sw/ompcnet
 test/udp/hw/.ipcache/
+tester

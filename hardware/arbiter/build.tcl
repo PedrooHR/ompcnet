@@ -44,6 +44,8 @@ set_top arbiter
 
 open_solution sol1
 
+config_rtl -reset all
+
 config_export -format xo -output [pwd]/../arbiter.xo
 
 if {$do_syn} {
