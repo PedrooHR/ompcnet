@@ -17,7 +17,7 @@ NET2APP_XO 		= $(HW_PATH)/net2app.xo
 DATAMOVER_XO 	= $(HW_PATH)/datamover.xo
 ARBITER_XO 	= $(HW_PATH)/arbiter.xo
 INCREMENT_XO 	= $(KERNELS_PATH)/increment.xo
-EVERY_XO = $(NET2APP_XO) $(APP2NET_XO) $(DATAMOVER_XO) $(INCREMENT_XO)
+EVERY_XO = $(NET2APP_XO) $(APP2NET_XO) $(DATAMOVER_XO) $(ARBITER_XO) $(INCREMENT_XO)
 
 ## VNX Configs
 VNX=xup_vitis_network_example

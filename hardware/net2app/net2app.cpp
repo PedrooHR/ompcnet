@@ -4,44 +4,10 @@
 
 #include "net2app.h"
 
-#include <hls_print.h>
-/*
-// packet[127:112]: 16 bits: Source rank
-// packet[111: 96]: 16 bits: Destination rank
-// packet[ 95: 88]:  8 bits: Operation (TX/RX Hs & Stall)
-// packet[ 87: 80]:  8 bits: Reserved - Errors
-// packet[ 79: 72]:  8 bits: Reserved
-// packet[ 71: 64]:  8 bits: Operation (send/recv, etc)
-// packet[ 63: 48]: 16 bits: Operation source rank
-// packet[ 47: 32]: 16 bits: Operation dest rank
-// packet[ 31:  0]: 32 bits: Operation length (29 used)
-void net2app_handshake(hls::stream<handshake_word> &handshake_tx,
-                       hls::stream<handshake_word> &handshake_rx,
-                       ap_uint<16> src) {
-#pragma HLS inline off
-  handshake_word hs_word;
-
-  // Wait for TX Request
-  hs_word = handshake_rx.read();
-
-  // Acknowledges the operation
-  hs_word.last = 1;
-  hs_word.keep = 0xFFFF;
-  hs_word.dest = src; // I am the op dest
-  hs_word.data.range(95, 88) = ARB_OPERATION::rx_response;
-
-  // Emit response
-  handshake_tx.write(hs_word);
-
-  // We are free to start the operation now... The receiving part should always
-  // start "receiving" before the sending part start transmitting data.
-}
-*/
 void net2app(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
              ap_uint<32> len, hls::stream<application_word> &application,
              hls::stream<network_word> &network,
-             /*hls::stream<handshake_word> &handshake_tx,
-             hls::stream<handshake_word> &handshake_rx,*/
+             hls::stream<app_cmd_word> &arbiter_cmd,
              hls::stream<cmd_word> &mm2s_cmd, hls::stream<sts_word> &mm2s_sts,
              hls::stream<cmd_word> &s2mm_cmd, hls::stream<sts_word> &s2mm_sts,
              hls::stream<data_word> &dm_in, hls::stream<data_word> &dm_out) {
@@ -52,8 +18,7 @@ void net2app(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
 #pragma HLS INTERFACE s_axilite port = len bundle = control
 #pragma HLS INTERFACE axis port = application
 #pragma HLS INTERFACE axis port = network
-/*#pragma HLS INTERFACE axis port = handshake_tx
-#pragma HLS INTERFACE axis port = handshake_rx*/
+#pragma HLS INTERFACE axis port = arbiter_cmd
 #pragma HLS INTERFACE axis port = mm2s_cmd
 #pragma HLS INTERFACE axis port = mm2s_sts
 #pragma HLS INTERFACE axis port = s2mm_cmd
@@ -79,11 +44,13 @@ void net2app(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
         - Receives from the Network stack and stores in a memory mapped space
     */
   case OPERATION::recv: {
-   // net2app_handshake(handshake_tx, handshake_rx, src);
-
     command_address(command) = add;
     command_len(command) = len;
     s2mm_cmd.write(command);
+
+    app_cmd_word cmd_word;
+    cmd_word.data = src;
+    arbiter_cmd.write(cmd_word);
 
     // data attribution
   recv_loop:
@@ -100,7 +67,9 @@ void net2app(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
         - Receives from the Network stack and redirects to the application
     */
   case OPERATION::stream_from: {
-    // net2app_handshake(handshake_tx, handshake_rx, src);
+    app_cmd_word cmd_word;
+    cmd_word.data = src;
+    arbiter_cmd.write(cmd_word);
 
   stream_from_loop:
     for (ap_uint<32> i = 0; i < npackets; i++) { // in bytes

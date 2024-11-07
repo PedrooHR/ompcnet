@@ -5,6 +5,7 @@
 void send_packet(hls::stream<network_word> &output_1,
                  hls::stream<network_word> &output_2,
                  hls::stream<network_word> &output_3, network_word value) {
+
   switch (value.dest) {
   case 0:
     output_1.write(value);

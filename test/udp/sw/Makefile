@@ -21,7 +21,7 @@ ompcnet-lib:
 	PREFIX=$(CURRENT_DIR)/ompcnet $(MAKE) -C ../../../software install
 
 vnxsh:
-	cd $(VNX_HOST) && mkdir -p build && cd build && cmake .. && make -j 8
+	cd $(VNX_HOST) && rm -rf build && mkdir -p build && cd build && cmake .. && make -j 8
 	cp $(VNX_HOST)/build/libvnxsh.so $(CURRENT_DIR)/ompcnet/lib/
 	cp -r $(VNX_HOST)/include/ $(CURRENT_DIR)/ompcnet/
 

@@ -28,7 +28,13 @@ enum ARB_OPERATION { // 8 bits
 // Internal types (HLS interface does not handle ap_axi* types)
 typedef ap_uint<512> mem_word;
 typedef ap_uint<512> wide_word;
-typedef ap_uint<512> arbiter_payload;
+
+typedef struct packet_word {
+  ap_uint<512> data;
+  ap_uint<64> keep;
+  ap_uint<16> dest;
+  ap_uint<1> last;
+} packet_word;
 
 // Interface types
 typedef ap_axiu<512, 0, 0, 16> handshake_word;
@@ -37,3 +43,4 @@ typedef ap_axiu<512, 0, 0, 0> data_word;
 typedef ap_axiu<512, 0, 0, 16> network_word;
 typedef ap_axiu<93, 0, 0, 0> cmd_word;
 typedef ap_axiu<1, 0, 0, 0> sts_word;
+typedef ap_axiu<16, 0, 0, 0> app_cmd_word;
