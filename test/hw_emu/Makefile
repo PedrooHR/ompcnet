@@ -23,5 +23,10 @@ clean:
 	rm -rf *.log
 	rm -rf *.xml
 	rm -rf .Xil
+	rm -rf *.csv
+	rm -rf *.protoinst
+	rm -rf *.wdb
+	rm -rf *.wcfg
+	rm -rf *.run_summary
 	$(MAKE) -C hw clean
 	$(MAKE) -C sw clean

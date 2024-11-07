@@ -26,13 +26,13 @@ kernels:
 	$(MAKE) -C $(KERNELS_PATH)
 
 test.xclbin: $(EVERY_XO)
-	v++ -l -t hw_emu --platform $(PLATFORM) --config $(CONFIG_FILE) --kernel_frequency $(FREQUENCY) $(EVERY_XO) -o $@
+	v++ -g -l -t hw_emu --platform $(PLATFORM) --no_ip_cache --config $(CONFIG_FILE) --kernel_frequency $(FREQUENCY) $(EVERY_XO) -o $@
 
 clean:
 	rm -rf $(wildcard *.log)
 	rm -rf $(wildcard *.xml)
 	rm -rf $(wildcard *_x)
-	rm -rf $(wildcard *.Xil)
+	rm -rf .Xil
 	rm -rf $(wildcard *.xclbin*)
 	$(MAKE) -C $(HW_PATH) clean
 	$(MAKE) -C $(KERNELS_PATH) clean
