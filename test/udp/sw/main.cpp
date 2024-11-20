@@ -22,7 +22,7 @@ using namespace std::chrono_literals;
 /**                              GLOBAL CONFIGS                              **/
 
 #define PACKET_INTS   352
-#define N_PACKETS     1
+#define N_PACKETS     50
 #define REPLAYS       1
 
 /**==========================================================================**/
@@ -172,7 +172,7 @@ void MemSend(xrt::device dev, int32_t *input, int32_t size, int32_t board_idx) {
   ompc.Send(0, 1, 0, bo, size * sizeof(int));
 
   while (!ompc.isOperationComplete(0))
-    std::this_thread::sleep_for(10ms);
+    ;
 
   printf("[Board %d] - Test 2: Finished operations\n", board_idx);
 }
@@ -186,10 +186,10 @@ void MemRecv(xrt::device dev, int32_t *output, int32_t size,
   xrt::bo bo = xrt::bo(dev, output, size * 4, xrt::bo::flags::normal, 0);
 
   // Dispatch OMPC Operations
-  ompc.Recv(0, 1, 0, bo, size * sizeof(int)); // Receiver Path
+  ompc.Recv(0, 1, 0, bo, size * sizeof(int));
 
   while (!ompc.isOperationComplete(0))
-    std::this_thread::sleep_for(10ms);
+    ;
 
   bo.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
 
@@ -197,7 +197,7 @@ void MemRecv(xrt::device dev, int32_t *output, int32_t size,
   for (int i = 0; i < size; i++)
     if (output[i] != 2)
       errors++;
-      
+
   printf("[Board %d] - Test 2: Number of errors: %d\n", board_idx, errors);
 }
 
@@ -271,7 +271,6 @@ void FPGA_1(std::string xclbin_file) {
   // Device start up
   xrt::device dev(0); // First Device
   xrt::uuid uuid = dev.load_xclbin(xclbin_file);  
-  std::this_thread::sleep_for(1s);
 
   // VNx
   std::unique_ptr<vnx::CMAC> cmac;
@@ -279,7 +278,6 @@ void FPGA_1(std::string xclbin_file) {
   ConfigureVNX(dev, 0, uuid, 2, cmac, network_layer);
   ConfigureARP(network_layer);
   ShowARPTable(0, 2, network_layer);  
-  std::this_thread::sleep_for(3s);
 
   // Increment kernel
   xrt::kernel increment = xrt::kernel(dev, uuid, "increment:{increment_0}");
@@ -287,7 +285,7 @@ void FPGA_1(std::string xclbin_file) {
   int *input_buffer;
   int *output_buffer;
 
-
+/*
   // Test 1
   for (int i = 0; i < REPLAYS; i++) {
     input_buffer = create_buffer(1, len);
@@ -296,7 +294,7 @@ void FPGA_1(std::string xclbin_file) {
     delete input_buffer;
     delete output_buffer;
   }
-
+*/
 
   // Test 2
   for (int i = 0; i < REPLAYS; i++) {
@@ -314,18 +312,17 @@ void FPGA_1(std::string xclbin_file) {
   }
 */
 
-  std::this_thread::sleep_for(2s);
-  vnx::stats_t stats = cmac->statistics(true);
-  for (auto entry : stats.tx) {
-    printf("Board 0: %s = %u\n", entry.first.c_str(), entry.second);
-  }
-  printf("Board 0: Packets out: %d\n", network_layer->get_udp_out_pkts());
-  printf("Board 0: APP Packets out: %d\n",
-         network_layer->get_udp_app_out_pkts());
-  printf("Board 0: Packets in: %d\n", network_layer->get_udp_in_pkts());
-  printf("Board 0: APP Packets in: %d\n", network_layer->get_udp_app_in_pkts());
-  printf("\n");
-
+  // std::this_thread::sleep_for(2s);
+  // vnx::stats_t stats = cmac->statistics(true);
+  // for (auto entry : stats.tx) {
+  //   printf("Board 0: %s = %u\n", entry.first.c_str(), entry.second);
+  // }
+  // printf("Board 0: Packets out: %d\n", network_layer->get_udp_out_pkts());
+  // printf("Board 0: APP Packets out: %d\n",
+  //        network_layer->get_udp_app_out_pkts());
+  // printf("Board 0: Packets in: %d\n", network_layer->get_udp_in_pkts());
+  // printf("Board 0: APP Packets in: %d\n", network_layer->get_udp_app_in_pkts());
+  // printf("\n");
 }
 
 void FPGA_2(std::string xclbin_file) {
@@ -336,7 +333,6 @@ void FPGA_2(std::string xclbin_file) {
   // Device start up
   xrt::device dev(1); // Second Device
   xrt::uuid uuid = dev.load_xclbin(xclbin_file);
-  std::this_thread::sleep_for(1s);
 
   // VNx
   std::unique_ptr<vnx::CMAC> cmac;
@@ -344,7 +340,6 @@ void FPGA_2(std::string xclbin_file) {
   ConfigureVNX(dev, 1, uuid, 2, cmac, network_layer);
   ConfigureARP(network_layer);
   ShowARPTable(1, 2, network_layer);  
-  std::this_thread::sleep_for(2s);
 
   // Increment kernel
   xrt::kernel increment = xrt::kernel(dev, uuid, "increment:{increment_0}");
@@ -352,8 +347,7 @@ void FPGA_2(std::string xclbin_file) {
   // Testing buffers
   int *input_buffer;
   int *output_buffer;
-
-
+/*
   // Test 1
   for (int i = 0; i < REPLAYS; i++) {
     input_buffer = create_buffer(1, len);
@@ -362,9 +356,9 @@ void FPGA_2(std::string xclbin_file) {
     delete input_buffer;
     delete output_buffer;
   }
-
-
+*/
   // Test 2
+  std::this_thread::sleep_for(10s);
   for (int i = 0; i < REPLAYS; i++) {
     output_buffer = create_buffer(0, len);
     MemRecv(dev, output_buffer, len, 1);
@@ -380,17 +374,16 @@ void FPGA_2(std::string xclbin_file) {
   }
 */
 
-  std::this_thread::sleep_for(3s);
-  vnx::stats_t stats = cmac->statistics(true);
-  for (auto entry : stats.rx) {
-    printf("Board 1: %s = %u\n", entry.first.c_str(), entry.second);
-  }
-  printf("Board 1: Packets out: %d\n", network_layer->get_udp_out_pkts());
-  printf("Board 1: APP Packets out: %d\n",
-         network_layer->get_udp_app_out_pkts());
-  printf("Board 1: Packets in: %d\n", network_layer->get_udp_in_pkts());
-  printf("Board 1: APP Packets in: %d\n", network_layer->get_udp_app_in_pkts());
-
+  // std::this_thread::sleep_for(3s);
+  // vnx::stats_t stats = cmac->statistics(true);
+  // for (auto entry : stats.rx) {
+  //   printf("Board 1: %s = %u\n", entry.first.c_str(), entry.second);
+  // }
+  // printf("Board 1: Packets out: %d\n", network_layer->get_udp_out_pkts());
+  // printf("Board 1: APP Packets out: %d\n",
+  //        network_layer->get_udp_app_out_pkts());
+  // printf("Board 1: Packets in: %d\n", network_layer->get_udp_in_pkts());
+  // printf("Board 1: APP Packets in: %d\n", network_layer->get_udp_app_in_pkts());
 }
 
 /**==========================================================================**/
