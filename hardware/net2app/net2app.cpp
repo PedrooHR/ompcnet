@@ -7,7 +7,6 @@
 void net2app(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
              ap_uint<32> len, hls::stream<application_word> &application,
              hls::stream<network_word> &network,
-             hls::stream<app_cmd_word> &arbiter_cmd,
              hls::stream<cmd_word> &mm2s_cmd, hls::stream<sts_word> &mm2s_sts,
              hls::stream<cmd_word> &s2mm_cmd, hls::stream<sts_word> &s2mm_sts,
              hls::stream<data_word> &dm_in, hls::stream<data_word> &dm_out) {
@@ -18,7 +17,6 @@ void net2app(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
 #pragma HLS INTERFACE s_axilite port = len bundle = control
 #pragma HLS INTERFACE axis port = application
 #pragma HLS INTERFACE axis port = network
-#pragma HLS INTERFACE axis port = arbiter_cmd
 #pragma HLS INTERFACE axis port = mm2s_cmd
 #pragma HLS INTERFACE axis port = mm2s_sts
 #pragma HLS INTERFACE axis port = s2mm_cmd
@@ -48,10 +46,6 @@ void net2app(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
     command_len(command) = len;
     s2mm_cmd.write(command);
 
-    app_cmd_word cmd_word;
-    cmd_word.data = src;
-    arbiter_cmd.write(cmd_word);
-
     // data attribution
   recv_loop:
     for (ap_uint<32> i = 0; i < npackets; i++) { // in bytes
@@ -67,14 +61,13 @@ void net2app(ap_uint<16> src, ap_uint<16> dst, ap_uint<3> op, ap_uint<64> add,
         - Receives from the Network stack and redirects to the application
     */
   case OPERATION::stream_from: {
-    app_cmd_word cmd_word;
-    cmd_word.data = src;
-    arbiter_cmd.write(cmd_word);
-
+    app_data.last = 0;
   stream_from_loop:
     for (ap_uint<32> i = 0; i < npackets; i++) { // in bytes
 #pragma HLS pipeline II = 1
       app_data.data = network.read().data;
+      if (i == npackets - 1)
+        app_data.last = 1;
       application.write(app_data);
     }
   } break;

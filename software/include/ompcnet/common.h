@@ -41,16 +41,14 @@ public:
     queue.push(object);
   }
 
-  T Pop() {
+  bool Pop(T *object) {
     std::lock_guard<std::mutex> lk(mtx);
-    T object = queue.front();
-    queue.pop();
-    return object;
-  }
-
-  bool IsEmpty() {
-    std::lock_guard<std::mutex> lk(mtx);
-    return queue.empty();
+    if (!queue.empty()) {
+      *object = queue.front();
+      queue.pop();
+      return true;
+    }
+    return false;
   }
 };
 }; // namespace ompcnet

@@ -15,7 +15,8 @@ private:
   std::mutex mtx;
 
 public:
-  OPHandler(int src, int dst, int op, unsigned long address, int len);
+  OPHandler(int src = -1, int dst = -1, int op = 0, unsigned long address = 0,
+            int len = 0);
 
   void setStatus(STATUS sts);
   STATUS getStatus();

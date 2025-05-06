@@ -4,9 +4,10 @@
 
 void send_packet(hls::stream<network_word> &output_1,
                  hls::stream<network_word> &output_2,
-                 hls::stream<network_word> &output_3, network_word value) {
-
-  switch (value.dest) {
+                 hls::stream<network_word> &output_3, network_word value, ap_uint<16> src) {
+  ap_uint<16> dest = value.dest;
+  value.dest = src;
+  switch (dest) {
   case 0:
     output_1.write(value);
     break;
@@ -40,13 +41,11 @@ void network(hls::stream<network_word> &input_1,
   network_word data_val;
 
   if (input_1.read_nb(data_val))
-    send_packet(output_1, output_2, output_3, data_val);
-
+    send_packet(output_1, output_2, output_3, data_val, 0);
   if (input_2.read_nb(data_val))
-    send_packet(output_1, output_2, output_3, data_val);
-
+    send_packet(output_1, output_2, output_3, data_val, 1);
   if (input_3.read_nb(data_val))
-    send_packet(output_1, output_2, output_3, data_val);
+    send_packet(output_1, output_2, output_3, data_val, 2);
 }
 
 #else // if compiling for COSIM
@@ -75,15 +74,15 @@ void network(int len_bytes,
 
   while (counter_1 > 0 || counter_2 > 0 || counter_3 > 0) {
     if (input_1.read_nb(data_val)) {
-      send_packet(output_1, output_2, output_3, data_val);
+      send_packet(output_1, output_2, output_3, data_val, 0);
       counter_1 = counter_1 - 64;
     }
     if (input_2.read_nb(data_val)) {
-      send_packet(output_1, output_2, output_3, data_val);
+      send_packet(output_1, output_2, output_3, data_val, 1);
       counter_2 = counter_2 - 64;
     }
     if (input_3.read_nb(data_val)) {
-      send_packet(output_1, output_2, output_3, data_val);
+      send_packet(output_1, output_2, output_3, data_val, 2);
       counter_3 = counter_3 - 64;
     }
   }

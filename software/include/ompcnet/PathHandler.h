@@ -1,6 +1,7 @@
 #ifndef PATHHANDLER_H
 #define PATHHANDLER_H
 
+#include <atomic>
 #include <condition_variable>
 #include <thread>
 #include <unordered_map>

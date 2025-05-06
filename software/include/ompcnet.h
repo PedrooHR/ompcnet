@@ -26,6 +26,7 @@ private:
   PathHandler *app2net;
   PathHandler *net2app;
 
+  std::mutex map_mtx;
   std::unordered_map<int32_t, OPHandler *> op_map;
 
 public:

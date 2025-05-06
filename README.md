@@ -4,3 +4,5 @@ OMPCNet is the network interface that connects application FPGA kernels with the
 - Buffer Operations: **send** and **recv**
 - Stream Operations: **stream_to** and **stream_from**
 - Local Operations: **stream2mem** and **mem2stream**
+
+Arbiter Hardware Module should be build with Vivado, exporting as .xo file

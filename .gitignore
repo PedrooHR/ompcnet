@@ -12,6 +12,8 @@
 *main
 *xsa.xml
 *.ltx
+software/*.o
 test/hw_emu/sw/ompcnet
+test/udp/sw/ompcnet
 test/udp/hw/.ipcache/
 tester

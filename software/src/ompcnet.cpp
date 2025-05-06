@@ -31,45 +31,52 @@ void OMPCNet::Send(int32_t src, int32_t dst, int32_t tag, xrt::bo &bo,
                    int32_t len) {
   OPHandler *new_op =
       new OPHandler(src, dst, OPERATION::send, bo.address(), len);
-  op_map[tag] = new_op;
   app2net->AddOperation(new_op);
+  std::lock_guard<std::mutex> lk(map_mtx);
+  op_map[tag] = new_op;
 }
 
 void OMPCNet::Recv(int32_t src, int32_t dst, int32_t tag, xrt::bo &bo,
                    int32_t len) {
   OPHandler *new_op =
       new OPHandler(src, dst, OPERATION::recv, bo.address(), len);
-  op_map[tag] = new_op;
   net2app->AddOperation(new_op);
+  std::lock_guard<std::mutex> lk(map_mtx);
+  op_map[tag] = new_op;
 }
 
 void OMPCNet::StreamTo(int32_t src, int32_t dst, int32_t tag, int32_t len) {
   OPHandler *new_op = new OPHandler(src, dst, OPERATION::stream_to, 0, len);
-  op_map[tag] = new_op;
   app2net->AddOperation(new_op);
+  std::lock_guard<std::mutex> lk(map_mtx);
+  op_map[tag] = new_op;
 }
 
 void OMPCNet::StreamFrom(int32_t src, int32_t dst, int32_t tag, int32_t len) {
   OPHandler *new_op = new OPHandler(src, dst, OPERATION::stream_from, 0, len);
-  op_map[tag] = new_op;
   net2app->AddOperation(new_op);
+  std::lock_guard<std::mutex> lk(map_mtx);
+  op_map[tag] = new_op;
 }
 
 void OMPCNet::StreamToMem(int32_t tag, xrt::bo &bo, int32_t len) {
   OPHandler *new_op =
       new OPHandler(-1, -1, OPERATION::stream2mem, bo.address(), len);
-  op_map[tag] = new_op;
   app2net->AddOperation(new_op);
+  std::lock_guard<std::mutex> lk(map_mtx);
+  op_map[tag] = new_op;
 }
 
 void OMPCNet::MemToStream(int32_t tag, xrt::bo &bo, int32_t len) {
   OPHandler *new_op =
       new OPHandler(-1, -1, OPERATION::mem2stream, bo.address(), len);
-  op_map[tag] = new_op;
   net2app->AddOperation(new_op);
+  std::lock_guard<std::mutex> lk(map_mtx);
+  op_map[tag] = new_op;
 }
 
 bool OMPCNet::isOperationComplete(int32_t tag) {
+  std::lock_guard<std::mutex> lk(map_mtx);
   auto op_handle = op_map.find(tag);
   if (op_handle != op_map.end()) {
     if (op_handle->second->getStatus() == STATUS::COMPLETED) {
@@ -77,6 +84,8 @@ bool OMPCNet::isOperationComplete(int32_t tag) {
       op_map.erase(op_handle);
       return true;
     }
+  } else {
+    return true; // Return true if no operation
   }
 
   return false;

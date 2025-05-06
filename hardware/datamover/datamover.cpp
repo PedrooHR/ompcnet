@@ -38,13 +38,18 @@ void mm2s(hls::stream<cmd_word> &mm2s_cmd,   // mm2s command stream
 
   // execute operation
   data_word value;
+  value.keep = -1;
+  value.last = 0;
   for (ap_int<29> i = 0; i < length; i++) {
     value.data = mm2s_axi[address + i];
+    if (i == length - 1)
+      value.last = 1;
     mm2s_axis.write(value);
   }
 
   // send status
   sts_word sts;
+  sts.last = 1;
   sts.data = 1;
   mm2s_sts.write(sts);
 }
@@ -65,12 +70,12 @@ void datamover(
 #pragma HLS INTERFACE axis port = mm2s_cmd depth = 8
 #pragma HLS INTERFACE axis port = mm2s_sts depth = 8
 #pragma HLS INTERFACE axis port = mm2s_axis depth = 64
-#pragma HLS INTERFACE m_axi port = mm2s_axi depth = 8
+#pragma HLS INTERFACE m_axi port = mm2s_axi depth = 8 max_read_burst_length = 64 num_read_outstanding = 16
 // S2MM Ports
 #pragma HLS INTERFACE axis port = s2mm_cmd depth = 8
 #pragma HLS INTERFACE axis port = s2mm_sts depth = 8
 #pragma HLS INTERFACE axis port = s2mm_axis depth = 64
-#pragma HLS INTERFACE m_axi port = s2mm_axi depth = 8
+#pragma HLS INTERFACE m_axi port = s2mm_axi depth = 8 max_write_burst_length = 64 num_write_outstanding = 16
   // Function return
 #ifndef COSIM
 #pragma HLS INTERFACE ap_ctrl_none port = return

@@ -11,8 +11,9 @@ PREFIX?=/usr/local
 all: $(TARGETS) 
 .PHONY: clean install
 
-libompcnet.so: $(wildcard src/*.cpp) $(wildcard include/*.h)
-	$(CXX) -shared  $(INCLUDES_PATH) $(LIBRARIES_PATH) $(STANDARD) -fPIC $^ -o $@ $(LIBRARIES)
+libompcnet.so: $(wildcard src/*.cpp)
+	$(CXX) -g -c $(INCLUDES_PATH) $(LIBRARIES_PATH) $(STANDARD) -fPIC $^
+	$(CXX) -g -shared  $(INCLUDES_PATH) $(LIBRARIES_PATH) $(STANDARD) -fPIC *.o -o $@ $(LIBRARIES)
 
 install-lib: libompcnet.so
 	mkdir -p $(DESTDIR)$(PREFIX)/lib/
@@ -27,3 +28,4 @@ install: install-lib install-include
 
 clean:
 	rm -rf *.so
+	rm -rf *.o

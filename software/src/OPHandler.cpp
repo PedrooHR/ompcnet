@@ -2,8 +2,7 @@
 
 namespace ompcnet {
 
-OPHandler::OPHandler(int src = -1, int dst = -1, int op = 0,
-                     unsigned long address = 0, int len = 0)
+OPHandler::OPHandler(int src, int dst, int op, unsigned long address, int len)
     : src(src), dst(dst), op(op), address(address), len(len) {}
 
 void OPHandler::setStatus(STATUS sts) {

@@ -3,21 +3,24 @@ IPS=hardware kernels test.xclbin
 
 HW_PATH=../../../hardware
 KERNELS_PATH=../../kernels
+TASK_BENCH_PATH=/home/pedro.rosso/TRETS/researchartifacts/task-bench/fpga_kernel
 
 CONFIG_FILE?=hw.cfg
-FREQUENCY?=250
+FREQUENCY?=200
 
 XCLBIN=test.xclbin
 
 HAS_HBM?=yes
 
 # OMPCNET XOS
-APP2NET_XO 		= $(HW_PATH)/app2net.xo
-NET2APP_XO 		= $(HW_PATH)/net2app.xo
+APP2NET_XO 	= $(HW_PATH)/app2net.xo
+NET2APP_XO 	= $(HW_PATH)/net2app.xo
 DATAMOVER_XO 	= $(HW_PATH)/datamover.xo
 ARBITER_XO 	= $(HW_PATH)/arbiter.xo
-INCREMENT_XO 	= $(KERNELS_PATH)/increment.xo
-EVERY_XO = $(NET2APP_XO) $(APP2NET_XO) $(DATAMOVER_XO) $(ARBITER_XO) $(INCREMENT_XO)
+TASK_BENCH_XO	= $(TASK_BENCH_PATH)/task_bench.xo
+LOOPBACK_XO 	= $(KERNELS_PATH)/loopback.xo
+MEMCPY_XO 	= $(KERNELS_PATH)/memcpy.xo
+EVERY_XO = $(NET2APP_XO) $(APP2NET_XO) $(DATAMOVER_XO) $(ARBITER_XO) $(TASK_BENCH_XO) $(LOOPBACK_XO) $(MEMCPY_XO)
 
 ## VNX Configs
 VNX=xup_vitis_network_example
@@ -25,7 +28,7 @@ VNX=xup_vitis_network_example
 NETLAYERDIR = $(VNX)/NetLayers
 CMACDIR     = $(VNX)/Ethernet
 NETLAYERHLS = $(NETLAYERDIR)/100G-fpga-network-stack-core
-ETH_IF=0
+ETH_IF=1
 CMAC_UDP_XO = $(VNX)/Ethernet/_x.$(PLATFORM)/cmac_$(ETH_IF).xo
 UDP_XO=$(VNX)/NetLayers/_x.$(PLATFORM)/networklayer.xo
 NETLAYERXML = $(NETLAYERDIR)/kernel.xml
@@ -50,15 +53,15 @@ NET_XO = $(CMAC_UDP_XO) $(UDP_XO)
 CONFIG += --user_ip_repo_paths $(HLS_IP_FOLDER)
 
 ## TARGETS
-all: hardware kernels $(XCLBIN)
-.PHONY: clean vnx
-vnx: $(CMAC_UDP_XO) $(UDP_XO)
+all: hardware kernels $(XCLBIN) vnxx
+.PHONY: clean vnxx
+vnxx: $(CMAC_UDP_XO) $(UDP_XO)
 
 hardware: 
 	$(MAKE) -C $(HW_PATH)
 
 kernels:
-	$(MAKE) -C $(KERNELS_PATH) increment
+	$(MAKE) -C $(KERNELS_PATH) loopback
 
 $(CMAC_UDP_XO) &:
 	git submodule update --init --recursive $(VNX)
@@ -75,7 +78,7 @@ $(UDP_XO): $(NETLAYERXML)
 	git submodule update --init --recursive $(VNX)
 	$(MAKE) -C $(NETLAYERDIR) DEVICE=$(PLATFORM) all
 
-$(XCLBIN): $(EVERY_XO) $(NET_XO) $(CONFIG_FILE)
+$(XCLBIN): $(EVERY_XO) $(NET_XO) $(CONFIG_FILE) vnxx
 	v++ --link --platform $(PLATFORM) --kernel_frequency $(FREQUENCY) $(CONFIG) -o $@ $(EVERY_XO) $(NET_XO) 
 
 clean:

@@ -21,21 +21,14 @@ void PathHandler::AddOperation(OPHandler *op) {
 }
 
 void PathHandler::ProcessQueue() {
+  OPHandler *op = nullptr;
   do {
     // wait for a notification if the queue is empty
-    if (operation_queue.IsEmpty()) {
-      std::unique_lock<std::mutex> lk(execution_mtx);
-      execution_cv.wait(lk);
-
-      if (is_finished)
-        break;
+    if (operation_queue.Pop(&op)) {
+      op->setStatus(STATUS::EXECUTING);
+      Executor(op);
+      op->setStatus(STATUS::COMPLETED);
     }
-
-    OPHandler *op = operation_queue.Pop();
-
-    op->setStatus(STATUS::EXECUTING);
-    Executor(op);  
-    op->setStatus(STATUS::COMPLETED);
   } while (!is_finished);
 }
 
